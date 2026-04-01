@@ -1,0 +1,355 @@
+{
+  "summary": {
+    "total_attacks": 999,
+    "mean_impact": 70.28683895270142,
+    "median_impact": 68.6958177227389,
+    "high_impact_count": 343,
+    "severity_distribution": {
+      "mild": 333,
+      "moderate": 333,
+      "severe": 333
+    }
+  },
+  "top_attacks": [
+    {
+      "attack_id": 0,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 54.4280420608667,
+      "total_violations": 1800,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 1,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 77.2564831198622,
+      "total_violations": 2100,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 2,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 68.6958177227389,
+      "total_violations": 2100,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 3,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 54.4280420608667,
+      "total_violations": 1800,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 4,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 68.6958177227389,
+      "total_violations": 2100,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 5,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 68.6958177227389,
+      "total_violations": 2100,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 6,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 68.6958177227389,
+      "total_violations": 2100,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 7,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 77.2564831198622,
+      "total_violations": 2100,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 8,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 68.6958177227389,
+      "total_violations": 2100,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 9,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 54.4280420608667,
+      "total_violations": 1800,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 10,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 91.5242587817344,
+      "total_violations": 2400,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 11,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 54.4280420608667,
+      "total_violations": 1800,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 12,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 54.4280420608667,
+      "total_violations": 1800,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 13,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 91.5242587817344,
+      "total_violations": 2400,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 14,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 68.6958177227389,
+      "total_violations": 2100,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 15,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 68.6958177227389,
+      "total_violations": 2100,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 16,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 91.5242587817344,
+      "total_violations": 2400,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 17,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 68.6958177227389,
+      "total_violations": 2100,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 18,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 91.5242587817344,
+      "total_violations": 2400,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    },
+    {
+      "attack_id": 19,
+      "severity_level": "mild",
+      "sigma": 1.0,
+      "impact_score": 91.5242587817344,
+      "total_violations": 2400,
+      "violation_percentage": 100.0,
+      "primary_violation": "ph_violation",
+      "affected_stages": [
+        "P4",
+        "P2",
+        "P5",
+        "P1",
+        "P6",
+        "P3"
+      ]
+    }
+  ]
+}

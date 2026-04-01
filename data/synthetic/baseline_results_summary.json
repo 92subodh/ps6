@@ -1,0 +1,92 @@
+{
+  "overall_results": {
+    "Threshold (3\u03c3)": {
+      "precision": 0.8407720144752714,
+      "recall": 0.6976976976976977,
+      "f1_score": 0.762582056892779,
+      "detection_rate": 69.76976976976978,
+      "false_positive_rate": 13.213213213213212
+    },
+    "Isolation Forest": {
+      "precision": 0.8659147869674185,
+      "recall": 0.6916916916916916,
+      "f1_score": 0.7690595436839176,
+      "detection_rate": 69.16916916916917,
+      "false_positive_rate": 10.71071071071071
+    },
+    "One-Class SVM": {
+      "precision": 0.8710888610763454,
+      "recall": 0.6966966966966966,
+      "f1_score": 0.7741935483870968,
+      "detection_rate": 69.66966966966966,
+      "false_positive_rate": 10.31031031031031
+    },
+    "LSTM Autoencoder": {
+      "precision": 0.9343575418994413,
+      "recall": 0.6696696696696697,
+      "f1_score": 0.7801749271137026,
+      "detection_rate": 66.96696696696696,
+      "false_positive_rate": 4.704704704704705
+    }
+  },
+  "by_severity": {
+    "mild": {
+      "Threshold (3\u03c3)": {
+        "detection_rate": 16.216216216216218,
+        "n_samples": 333
+      },
+      "Isolation Forest": {
+        "detection_rate": 10.51051051051051,
+        "n_samples": 333
+      },
+      "One-Class SVM": {
+        "detection_rate": 9.60960960960961,
+        "n_samples": 333
+      },
+      "LSTM Autoencoder": {
+        "detection_rate": 9.00900900900901,
+        "n_samples": 333
+      }
+    },
+    "moderate": {
+      "Threshold (3\u03c3)": {
+        "detection_rate": 93.09309309309309,
+        "n_samples": 333
+      },
+      "Isolation Forest": {
+        "detection_rate": 96.996996996997,
+        "n_samples": 333
+      },
+      "One-Class SVM": {
+        "detection_rate": 99.3993993993994,
+        "n_samples": 333
+      },
+      "LSTM Autoencoder": {
+        "detection_rate": 91.8918918918919,
+        "n_samples": 333
+      }
+    },
+    "severe": {
+      "Threshold (3\u03c3)": {
+        "detection_rate": 100.0,
+        "n_samples": 333
+      },
+      "Isolation Forest": {
+        "detection_rate": 100.0,
+        "n_samples": 333
+      },
+      "One-Class SVM": {
+        "detection_rate": 100.0,
+        "n_samples": 333
+      },
+      "LSTM Autoencoder": {
+        "detection_rate": 100.0,
+        "n_samples": 333
+      }
+    }
+  },
+  "test_set": {
+    "n_normal": 999,
+    "n_attacks": 999
+  }
+}

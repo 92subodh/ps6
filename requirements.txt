@@ -1,0 +1,17 @@
+# NOTE: TensorFlow requires Python 3.9-3.12 (Python 3.14 is NOT supported yet)
+# If you're on Python 3.14, create a virtual environment with Python 3.11 or 3.12:
+#   py -3.11 -m venv venv
+#   .\venv\Scripts\activate
+#   pip install -r requirements.txt
+
+tensorflow>=2.10.0,<2.17.0
+pandas>=2.0.0
+numpy>=1.23.0,<2.0.0
+scikit-learn>=1.2.0
+scipy>=1.10.0
+streamlit>=1.28.0
+plotly>=5.14.0
+h5py>=3.8.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+tqdm>=4.65.0

@@ -1,0 +1,256 @@
+{
+  "summary": {
+    "total_gaps": 61,
+    "gap_type_distribution": {
+      "multi_stage": 61
+    },
+    "impact_threshold": 70,
+    "detection_threshold": 0.3
+  },
+  "top_gaps": [
+    {
+      "attack_id": 109,
+      "severity_level": "mild",
+      "impact_score": 97.23136904648328,
+      "detection_rate": 25.0,
+      "detected_by": [
+        "Threshold (3\u03c3)"
+      ],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 98,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 147,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 290,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 25.0,
+      "detected_by": [
+        "Threshold (3\u03c3)"
+      ],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 280,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 111,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 117,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 25.0,
+      "detected_by": [
+        "Threshold (3\u03c3)"
+      ],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 131,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 25.0,
+      "detected_by": [
+        "Threshold (3\u03c3)"
+      ],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 274,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 145,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 153,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 93,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 157,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 25.0,
+      "detected_by": [
+        "Threshold (3\u03c3)"
+      ],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 165,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 169,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 251,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 183,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 191,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 25.0,
+      "detected_by": [
+        "LSTM Autoencoder"
+      ],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 248,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    },
+    {
+      "attack_id": 239,
+      "severity_level": "mild",
+      "impact_score": 91.5242587817344,
+      "detection_rate": 0.0,
+      "detected_by": [],
+      "gap_type": "multi_stage",
+      "affected_stages": "P4, P2, P5, P1, P6, P3",
+      "primary_violation": "ph_violation",
+      "total_violations": 2400
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "gap_type": "multi_stage",
+      "count": 61,
+      "recommendation": "Implement cross-stage correlation monitoring",
+      "details": "Add detection rules that track cascading effects across P1-P6",
+      "implementation": "if (P1_violation and P3_violation) then alert()",
+      "expected_improvement": "60%",
+      "description": "60% reduction in multi-stage gap misses"
+    }
+  ]
+}
