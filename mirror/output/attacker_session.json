@@ -19,6 +19,44 @@
           "Feature_4": 1.9792
         }
       }
+    },
+    {
+      "timestamp": "2026-04-04T09:04:16.078054+00:00",
+      "type": "probe",
+      "target_sensors": [
+        "Feature_7",
+        "Feature_9"
+      ],
+      "command": "set Feature_7 to 0.95",
+      "response_observed": {
+        "alerts": [],
+        "sample": {
+          "Feature_0": 987.975,
+          "Feature_1": 0.9821,
+          "Feature_2": 0.9748,
+          "Feature_3": 0.4739,
+          "Feature_4": 1.9792
+        }
+      }
+    },
+    {
+      "timestamp": "2026-04-04T09:06:54.831127+00:00",
+      "type": "probe",
+      "target_sensors": [
+        "Feature_7",
+        "Feature_9"
+      ],
+      "command": "set Feature_7 to 0.95",
+      "response_observed": {
+        "alerts": [],
+        "sample": {
+          "Feature_0": 987.975,
+          "Feature_1": 0.9821,
+          "Feature_2": 0.9748,
+          "Feature_3": 0.4739,
+          "Feature_4": 1.9792
+        }
+      }
     }
   ]
 }

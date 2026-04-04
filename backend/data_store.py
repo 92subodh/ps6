@@ -4,10 +4,24 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
+
+try:
+    import shap
+except Exception:  # noqa: BLE001
+    shap = None
+
+try:
+    from lime import lime_tabular
+except Exception:  # noqa: BLE001
+    lime_tabular = None
 
 
 class DataStore:
@@ -35,6 +49,13 @@ class DataStore:
         self.blindspot_scores = self._build_blindspot_scores()
         self.kill_chains = self._build_kill_chains()
         self.mitigation_rules = self._load_existing_mitigation_rules()
+
+        self._explainability_model: Optional[RandomForestRegressor] = None
+        self._shap_explainer: Any = None
+        self._lime_explainer: Any = None
+        self._sensor_feature_by_attack: Dict[int, np.ndarray] = {}
+        self._explainability_backend = "heuristic"
+        self._initialize_explainability()
 
     def _load_json(self, filename: str, default_value: Any) -> Any:
         file_path = self.data_dir / filename
@@ -279,21 +300,110 @@ class DataStore:
             return list(range(34, 43))
         return list(range(43, min(51, len(self.sensor_names))))
 
-    def get_attack_library(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
-        attacks = [dict(item) for item in self.attack_library]
-        return attacks[:limit] if limit else attacks
+    def _stage_for_sensor_index(self, idx: int) -> str:
+        if idx < 9:
+            return "P1"
+        if idx < 17:
+            return "P2"
+        if idx < 26:
+            return "P3"
+        if idx < 34:
+            return "P4"
+        if idx < 43:
+            return "P5"
+        return "P6"
 
-    def get_attack(self, attack_id: int) -> Optional[Dict[str, Any]]:
-        attack = self.attacks_by_id.get(attack_id)
-        return dict(attack) if attack else None
+    def _sensor_profile_for_attack(self, attack: Dict[str, Any]) -> np.ndarray:
+        attack_id = int(attack.get("attack_id", 0))
+        sigma = float(attack.get("sigma", 1.0))
+        impact_score = float(attack.get("impact_score", 60.0))
+        detection_rate = float(attack.get("detection_rate", 45.0))
+        attack_type = str(attack.get("attack_type", "vae_boundary"))
 
-    def get_blindspot_scores(self) -> Dict[str, float]:
-        return dict(self.blindspot_scores)
+        target_stage = str(attack.get("target_stage", "P1"))
+        affected_stages = set(attack.get("affected_stages", []))
+        if not affected_stages:
+            affected_stages = {target_stage}
 
-    def get_kill_chains(self) -> List[Dict[str, Any]]:
-        return [dict(item) for item in self.kill_chains]
+        rng = random.Random((attack_id + 1) * 9973)
+        profile: List[float] = []
 
-    def get_shap_explanation(self, attack_id: int) -> Dict[str, Any]:
+        for idx, _ in enumerate(self.sensor_names):
+            stage = self._stage_for_sensor_index(idx)
+            base_level = 0.03 + (impact_score / 100.0) * 0.04
+
+            if stage in affected_stages:
+                stage_level = 0.16 + (sigma * 0.08) + (impact_score / 100.0) * 0.22
+
+                if attack_type == "lstm_drift":
+                    stage_level *= 0.9 + ((idx % 5) * 0.03)
+                elif attack_type == "cgan_novel":
+                    stage_level *= 1.05 + (0.2 if idx % 7 == 0 else 0.0)
+                else:
+                    stage_level *= 1.0 + (0.02 * ((attack_id + idx) % 6))
+
+                value = stage_level + rng.uniform(-0.03, 0.03)
+            else:
+                value = base_level + rng.uniform(-0.02, 0.02)
+
+            value *= 1.0 + ((100.0 - detection_rate) / 600.0)
+            profile.append(max(0.0, min(2.5, value)))
+
+        return np.array(profile, dtype=float)
+
+    def _initialize_explainability(self) -> None:
+        if len(self.attack_library) < 30:
+            return
+
+        train_vectors: List[np.ndarray] = []
+        train_labels: List[float] = []
+
+        for attack in self.attack_library:
+            attack_id = int(attack["attack_id"])
+            vector = self._sensor_profile_for_attack(attack)
+            self._sensor_feature_by_attack[attack_id] = vector
+            train_vectors.append(vector)
+            train_labels.append(float(attack.get("rank_score", 0.0)))
+
+        x_train = np.vstack(train_vectors)
+        y_train = np.array(train_labels, dtype=float)
+
+        try:
+            model = RandomForestRegressor(
+                n_estimators=320,
+                max_depth=14,
+                random_state=2026,
+                n_jobs=-1,
+            )
+            model.fit(x_train, y_train)
+            self._explainability_model = model
+
+            if shap is not None:
+                self._shap_explainer = shap.TreeExplainer(model)
+            if lime_tabular is not None:
+                self._lime_explainer = lime_tabular.LimeTabularExplainer(
+                    x_train,
+                    mode="regression",
+                    feature_names=self.sensor_names,
+                    random_state=2026,
+                    discretize_continuous=True,
+                )
+
+            if self._shap_explainer is not None and self._lime_explainer is not None:
+                self._explainability_backend = "shap_lime"
+            elif self._shap_explainer is not None:
+                self._explainability_backend = "shap_only"
+            elif self._lime_explainer is not None:
+                self._explainability_backend = "lime_only"
+            else:
+                self._explainability_backend = "model_only"
+        except Exception:  # noqa: BLE001
+            self._explainability_model = None
+            self._shap_explainer = None
+            self._lime_explainer = None
+            self._explainability_backend = "heuristic"
+
+    def _heuristic_shap_explanation(self, attack_id: int) -> Dict[str, Any]:
         attack = self.attacks_by_id.get(attack_id)
         if not attack:
             raise KeyError("Attack not found")
@@ -325,9 +435,53 @@ class DataStore:
             "attack_id": attack_id,
             "top_features": top_features,
             "summary": "Model confidence points to %s as the primary impact region." % target_stage,
+            "explainability_backend": "heuristic",
         }
 
-    def get_lime_rule(self, attack_id: int) -> Dict[str, Any]:
+    def _extract_shap_vector(self, attack_id: int) -> Optional[np.ndarray]:
+        if self._shap_explainer is None:
+            return None
+
+        sample = self._sensor_feature_by_attack.get(attack_id)
+        if sample is None:
+            return None
+
+        try:
+            shap_values = self._shap_explainer.shap_values(sample.reshape(1, -1))
+            if isinstance(shap_values, list):
+                vector = np.array(shap_values[0], dtype=float)
+            else:
+                vector = np.array(shap_values, dtype=float)
+            if vector.ndim == 2:
+                vector = vector[0]
+            return vector
+        except Exception:  # noqa: BLE001
+            return None
+
+    def _parse_lime_condition(self, condition: str) -> Optional[Dict[str, Any]]:
+        simple_pattern = re.compile(r"^\s*(Feature_\d+)\s*(<=|<|>=|>)\s*([+-]?\d+(?:\.\d+)?)\s*$")
+        reverse_pattern = re.compile(r"^\s*([+-]?\d+(?:\.\d+)?)\s*(<=|<|>=|>)\s*(Feature_\d+)\s*$")
+        between_pattern = re.compile(r"^\s*([+-]?\d+(?:\.\d+)?)\s*<\s*(Feature_\d+)\s*<=\s*([+-]?\d+(?:\.\d+)?)\s*$")
+
+        between_match = between_pattern.match(condition)
+        if between_match:
+            _, sensor, upper = between_match.groups()
+            return {"sensor": sensor, "op": "<=", "value": round(float(upper), 4)}
+
+        simple_match = simple_pattern.match(condition)
+        if simple_match:
+            sensor, op, value = simple_match.groups()
+            return {"sensor": sensor, "op": op, "value": round(float(value), 4)}
+
+        reverse_match = reverse_pattern.match(condition)
+        if reverse_match:
+            value, op, sensor = reverse_match.groups()
+            reverse_op = {"<": ">", "<=": ">=", ">": "<", ">=": "<="}.get(op, op)
+            return {"sensor": sensor, "op": reverse_op, "value": round(float(value), 4)}
+
+        return None
+
+    def _heuristic_lime_rule(self, attack_id: int) -> Dict[str, Any]:
         shap = self.get_shap_explanation(attack_id)
         top_features = shap.get("top_features", [])[:2]
         if len(top_features) < 2:
@@ -352,6 +506,111 @@ class DataStore:
                 sensor_b: {"op": "<", "value": threshold_b},
             },
             "confidence": round(rng.uniform(0.62, 0.91), 3),
+            "explainability_backend": "heuristic",
+        }
+
+    def get_attack_library(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+        attacks = [dict(item) for item in self.attack_library]
+        return attacks[:limit] if limit else attacks
+
+    def get_attack(self, attack_id: int) -> Optional[Dict[str, Any]]:
+        attack = self.attacks_by_id.get(attack_id)
+        return dict(attack) if attack else None
+
+    def get_blindspot_scores(self) -> Dict[str, float]:
+        return dict(self.blindspot_scores)
+
+    def get_kill_chains(self) -> List[Dict[str, Any]]:
+        return [dict(item) for item in self.kill_chains]
+
+    def get_shap_explanation(self, attack_id: int) -> Dict[str, Any]:
+        attack = self.attacks_by_id.get(attack_id)
+        if not attack:
+            raise KeyError("Attack not found")
+
+        shap_vector = self._extract_shap_vector(attack_id)
+        if shap_vector is None:
+            return self._heuristic_shap_explanation(attack_id)
+
+        sample = self._sensor_feature_by_attack.get(attack_id)
+        prediction = None
+        if self._explainability_model is not None and sample is not None:
+            prediction = float(self._explainability_model.predict(sample.reshape(1, -1))[0])
+
+        top_indices = np.argsort(np.abs(shap_vector))[::-1][:5]
+        top_features: List[Dict[str, Any]] = []
+        for idx in top_indices:
+            raw_value = float(shap_vector[idx])
+            top_features.append(
+                {
+                    "sensor": self.sensor_names[int(idx)],
+                    "shap_value": round(abs(raw_value), 4),
+                    "direction": "increase" if raw_value >= 0 else "decrease",
+                    "signed_contribution": round(raw_value, 4),
+                }
+            )
+
+        target_stage = attack.get("target_stage", "P1")
+        return {
+            "attack_id": attack_id,
+            "top_features": top_features,
+            "summary": "Tree SHAP localized strongest contribution in and around %s." % target_stage,
+            "predicted_rank_score": round(prediction, 3) if prediction is not None else None,
+            "explainability_backend": self._explainability_backend,
+        }
+
+    def get_lime_rule(self, attack_id: int) -> Dict[str, Any]:
+        attack = self.attacks_by_id.get(attack_id)
+        if not attack:
+            raise KeyError("Attack not found")
+
+        if self._lime_explainer is None or self._explainability_model is None:
+            return self._heuristic_lime_rule(attack_id)
+
+        sample = self._sensor_feature_by_attack.get(attack_id)
+        if sample is None:
+            return self._heuristic_lime_rule(attack_id)
+
+        try:
+            explanation = self._lime_explainer.explain_instance(
+                sample,
+                self._explainability_model.predict,
+                num_features=2,
+            )
+            raw_conditions = explanation.as_list()
+        except Exception:  # noqa: BLE001
+            return self._heuristic_lime_rule(attack_id)
+
+        parsed_conditions: List[Dict[str, Any]] = []
+        condition_text_parts: List[str] = []
+        weights: List[float] = []
+
+        for condition, weight in raw_conditions[:2]:
+            condition_text_parts.append(condition)
+            weights.append(float(weight))
+            parsed = self._parse_lime_condition(condition)
+            if parsed is not None:
+                parsed_conditions.append(parsed)
+
+        if not condition_text_parts:
+            return self._heuristic_lime_rule(attack_id)
+
+        sensors_involved = list(dict.fromkeys([item["sensor"] for item in parsed_conditions]))
+        threshold_dict = {
+            item["sensor"]: {"op": item["op"], "value": item["value"]}
+            for item in parsed_conditions
+        }
+
+        mean_abs_weight = abs(float(np.mean(weights))) if weights else 0.0
+        confidence = round(max(0.56, min(0.93, 0.62 + (mean_abs_weight * 0.35))), 3)
+
+        return {
+            "attack_id": attack_id,
+            "condition_text": "IF %s THEN flag anomaly" % (" AND ".join(condition_text_parts)),
+            "sensors_involved": sensors_involved,
+            "threshold_dict": threshold_dict,
+            "confidence": confidence,
+            "explainability_backend": self._explainability_backend,
         }
 
     def get_gaps(self, limit: int = 60) -> List[Dict[str, Any]]:

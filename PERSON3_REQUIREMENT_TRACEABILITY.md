@@ -11,8 +11,8 @@ This sheet maps Person 3 PDF requirements to implementation status and evidence 
 | L5-BE-03 | Simulation API with attack selection | Complete | POST /simulate in backend/main.py + backend/simulation.py |
 | L5-BE-04 | Blindspot score API | Complete | GET /blindspot-scores in backend/main.py + backend/data_store.py |
 | L5-BE-05 | Kill-chain API | Complete | GET /kill-chains in backend/main.py + backend/data_store.py |
-| L5-BE-06 | Explainability API for SHAP | Complete (heuristic backend) | GET /shap/{attack_id} in backend/main.py + backend/data_store.py |
-| L5-BE-07 | What-if natural language API | Complete (rule-based NLP) | POST /what-if in backend/main.py |
+| L5-BE-06 | Explainability API for SHAP | Complete (model-backed with fallback) | GET /shap/{attack_id} in backend/main.py + backend/data_store.py |
+| L5-BE-07 | What-if natural language API | Complete (spaCy parser with fallback) | POST /what-if in backend/main.py + backend/query_parser.py |
 | L5-BE-08 | Apply-fix API + rule persistence | Complete | POST /apply-fix/{attack_id} in backend/main.py + backend/generated/mitigation_rules.json |
 | L5-BE-09 | Real-time simulation WebSocket | Complete | /ws/simulation in backend/main.py |
 | L5-BE-10 | Decoy and real WebSocket channels | Complete | /ws/decoy and /ws/real in backend/main.py |
@@ -49,6 +49,6 @@ This sheet maps Person 3 PDF requirements to implementation status and evidence 
 
 ## Known Partial Items (Beyond Submission Baseline)
 
-1. SHAP and LIME are served via deterministic heuristics rather than a full explainability pipeline.
-2. What-if parsing is keyword/rule based rather than full NLP model parsing.
-3. Frontend bundle can be optimized further for production deployment.
+1. Explainability pipeline is model-backed and uses SHAP/LIME when available, with deterministic fallback mode for degraded environments.
+2. What-if parser uses spaCy (en_core_web_sm when installed) with blank/regex fallback.
+3. Frontend bundle can still be optimized further for production deployment.

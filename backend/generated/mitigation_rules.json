@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-04-04T08:35:58.194427+00:00",
+  "updated_at": "2026-04-04T09:06:54.719178+00:00",
   "rules": [
     {
       "rule_id": "rule_61_1",
@@ -23,6 +23,54 @@
       "confidence": 0.772,
       "attacks_covered": [
         61
+      ]
+    },
+    {
+      "rule_id": "rule_677_2",
+      "attack_id": 677,
+      "generated_at": "2026-04-04T09:04:15.878129+00:00",
+      "condition_text": "IF Feature_13 > 0.09 AND Feature_9 > 0.09 THEN flag anomaly",
+      "sensors_involved": [
+        "Feature_13",
+        "Feature_9"
+      ],
+      "threshold_dict": {
+        "Feature_13": {
+          "op": ">",
+          "value": 0.09
+        },
+        "Feature_9": {
+          "op": ">",
+          "value": 0.09
+        }
+      },
+      "confidence": 0.93,
+      "attacks_covered": [
+        677
+      ]
+    },
+    {
+      "rule_id": "rule_677_3",
+      "attack_id": 677,
+      "generated_at": "2026-04-04T09:06:54.719178+00:00",
+      "condition_text": "IF Feature_13 > 0.09 AND Feature_9 > 0.09 THEN flag anomaly",
+      "sensors_involved": [
+        "Feature_13",
+        "Feature_9"
+      ],
+      "threshold_dict": {
+        "Feature_13": {
+          "op": ">",
+          "value": 0.09
+        },
+        "Feature_9": {
+          "op": ">",
+          "value": 0.09
+        }
+      },
+      "confidence": 0.93,
+      "attacks_covered": [
+        677
       ]
     }
   ]

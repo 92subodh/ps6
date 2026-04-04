@@ -5,13 +5,14 @@ from __future__ import annotations
 import asyncio
 import random
 import re
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from backend.data_store import DataStore
+from backend.query_parser import ScenarioQueryParser
 from backend.simulation import SimulationEngine
 from mirror.profile import AttackerGenomeEngine
 from mirror.recorder import AttackRecorder
@@ -51,55 +52,52 @@ store = DataStore()
 simulator = SimulationEngine(store.sensor_names)
 recorder = AttackRecorder()
 genome = AttackerGenomeEngine()
+query_parser = ScenarioQueryParser()
 
 what_if_cache: Dict[str, Dict[str, object]] = {}
 decoy_overrides: Dict[str, float] = {}
 
 
-def _parse_attack_type(query: str) -> Optional[str]:
-    normalized = query.lower()
-    if "drift" in normalized:
-        return "lstm_drift"
-    if "spike" in normalized or "novel" in normalized:
-        return "cgan_novel"
-    if "boundary" in normalized or "replay" in normalized:
-        return "vae_boundary"
-    return None
+def _attack_match_score(attack: Dict[str, object], parsed_query: Dict[str, Any]) -> float:
+    score = float(attack.get("rank_score", 0.0)) / 100.0
+
+    stage = parsed_query.get("stage")
+    attack_type = parsed_query.get("attack_type")
+    severity = parsed_query.get("severity")
+
+    if stage:
+        if attack.get("target_stage") == stage:
+            score += 3.2
+        elif stage in attack.get("affected_stages", []):
+            score += 2.0
+
+    if attack_type:
+        if attack.get("attack_type") == attack_type:
+            score += 3.0
+
+    if severity:
+        if attack.get("severity_level") == severity:
+            score += 1.8
+
+    return score
 
 
-def _parse_stage(query: str) -> Optional[str]:
-    match = re.search(r"\bP([1-6])\b", query.upper())
-    if not match:
-        return None
-    return "P%s" % match.group(1)
-
-
-def _pick_attack_for_query(query: str) -> Dict[str, object]:
-    stage = _parse_stage(query)
-    attack_type = _parse_attack_type(query)
-
-    for attack in store.get_attack_library():
-        if stage and attack.get("target_stage") != stage:
-            continue
-        if attack_type and attack.get("attack_type") != attack_type:
-            continue
-        return attack
-
-    for attack in store.get_attack_library():
-        if stage and attack.get("target_stage") == stage:
-            return attack
-
-    attacks = store.get_attack_library(limit=1)
+def _pick_attack_for_query(query: str) -> Tuple[Dict[str, object], Dict[str, Any]]:
+    parsed = query_parser.parse(query)
+    attacks = store.get_attack_library()
     if not attacks:
         raise HTTPException(status_code=404, detail="No attacks available")
-    return attacks[0]
+
+    selected = max(attacks, key=lambda item: _attack_match_score(item, parsed))
+    return selected, parsed
 
 
 def _generate_what_if_result(query: str) -> Dict[str, object]:
-    attack = _pick_attack_for_query(query)
+    attack, parsed = _pick_attack_for_query(query)
+    duration_seconds = int(parsed.get("duration_seconds") or 40)
     quick_log = simulator.run_attack(
         attack=attack,
-        duration_seconds=40,
+        duration_seconds=duration_seconds,
         speed_multiplier=2.0,
         mode="real",
     )
@@ -120,6 +118,7 @@ def _generate_what_if_result(query: str) -> Dict[str, object]:
 
     return {
         "attack_generated": attack,
+        "parser_metadata": parsed,
         "affected_sensors": store.get_shap_explanation(int(attack["attack_id"]))["top_features"],
         "detected": len(unique_alerts) > 0,
         "cascade_chain": cascade_chain,
@@ -127,12 +126,15 @@ def _generate_what_if_result(query: str) -> Dict[str, object]:
         "recommended_fix": store.get_lime_rule(int(attack["attack_id"])),
         "plain_english_summary": (
             "Scenario routed to attack %d targeting %s. "
-            "Estimated time-to-failure is %d minutes with %d active alert types."
+            "Estimated time-to-failure is %d minutes with %d active alert types. "
+            "Parser confidence %.2f via %s."
             % (
                 int(attack["attack_id"]),
                 str(attack.get("target_stage", "P1")),
                 time_to_failure,
                 len(unique_alerts),
+                float(parsed.get("confidence", 0.0)),
+                str(parsed.get("parser_backend", "regex")),
             )
         ),
         "simulation_excerpt": quick_log[-5:],
@@ -149,9 +151,17 @@ async def prewarm_what_if_cache() -> None:
         for attack_type in type_tokens:
             templates.append("What if %s sensors are under %s attack during peak flow?" % (stage, attack_type))
 
-    templates = templates[:20]
-    for query in templates:
-        what_if_cache[query.lower()] = _generate_what_if_result(query)
+    templates = templates[:6]
+
+    async def _warm_cache() -> None:
+        for query in templates:
+            try:
+                what_if_cache[query.lower()] = _generate_what_if_result(query)
+            except Exception:  # noqa: BLE001
+                continue
+            await asyncio.sleep(0)
+
+    asyncio.create_task(_warm_cache())
 
 
 @app.get("/health")

@@ -14,6 +14,14 @@ pip install -r requirements.txt
 uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+For highest NLP parsing quality, install spaCy English model once:
+
+```powershell
+python -m spacy download en_core_web_sm
+```
+
+If the model is absent, parser automatically falls back to spaCy blank tokenizer or regex mode.
+
 Health check:
 
 ```powershell
@@ -29,6 +37,11 @@ Primary endpoints:
 - GET /shap/{attack_id}
 - POST /what-if
 - POST /apply-fix/{attack_id}
+
+Explainability details:
+- `/shap/{attack_id}` now uses model-backed Tree SHAP when available
+- `/lime/{attack_id}` now uses LIME local explanations when available
+- Both gracefully fall back to deterministic heuristic mode if optional packages are unavailable
 
 MIRROR endpoints:
 - POST /attacker/probe
