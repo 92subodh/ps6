@@ -1,0 +1,29 @@
+{
+  "updated_at": "2026-04-04T08:35:58.194427+00:00",
+  "rules": [
+    {
+      "rule_id": "rule_61_1",
+      "attack_id": 61,
+      "generated_at": "2026-04-04T08:35:58.194427+00:00",
+      "condition_text": "IF Feature_11 > 0.774 AND Feature_6 < 0.307 THEN flag anomaly",
+      "sensors_involved": [
+        "Feature_11",
+        "Feature_6"
+      ],
+      "threshold_dict": {
+        "Feature_11": {
+          "op": ">",
+          "value": 0.774
+        },
+        "Feature_6": {
+          "op": "<",
+          "value": 0.307
+        }
+      },
+      "confidence": 0.772,
+      "attacks_covered": [
+        61
+      ]
+    }
+  ]
+}

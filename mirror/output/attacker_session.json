@@ -1,0 +1,24 @@
+{
+  "session_id": "70c726ed-a438-47bc-b50a-6d2f10e8ff5d",
+  "actions": [
+    {
+      "timestamp": "2026-04-04T08:35:58.393662+00:00",
+      "type": "probe",
+      "target_sensors": [
+        "Feature_7",
+        "Feature_9"
+      ],
+      "command": "set Feature_7 to 0.95",
+      "response_observed": {
+        "alerts": [],
+        "sample": {
+          "Feature_0": 987.975,
+          "Feature_1": 0.9821,
+          "Feature_2": 0.9748,
+          "Feature_3": 0.4739,
+          "Feature_4": 1.9792
+        }
+      }
+    }
+  ]
+}

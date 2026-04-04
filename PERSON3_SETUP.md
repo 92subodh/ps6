@@ -81,3 +81,36 @@ Implemented routes:
 
 The backend uses local JSON artifacts in data/synthetic.
 If those files are absent, the service creates synthetic fallback attack profiles so the UI remains runnable.
+
+## 6) Submission validation script
+
+With backend running, execute:
+
+```powershell
+python validate_person3.py
+```
+
+The script verifies:
+- Core REST endpoints
+- Simulation/decoy/real WebSocket streams
+- Persistence artifacts:
+	- backend/generated/mitigation_rules.json
+	- mirror/output/attacker_session.json
+
+## 7) Restart persistence check
+
+1. Trigger one fix and one attacker probe:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/apply-fix/0" -Method Post
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/attacker/probe" -Method Post -ContentType "application/json" -Body '{"query_type":"probe","sensors_queried":["Feature_7"],"command_sent":"set Feature_7 to 0.95"}'
+```
+
+2. Restart backend server.
+3. Check status:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/mirror/status" -Method Get
+```
+
+Expected: prior actions remain visible in recent_actions and persisted files remain populated.

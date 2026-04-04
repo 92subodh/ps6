@@ -17,8 +17,11 @@ class AttackRecorder:
         self.output_dir = output_dir or (Path(__file__).resolve().parent / "output")
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
+        self._session_path = self.output_dir / "attacker_session.json"
+        self._behavior_path = self.output_dir / "behavioral_features.json"
         self._session_id = str(uuid.uuid4())
         self._actions: List[Dict[str, Any]] = []
+        self._load_existing_session()
 
     @property
     def session_id(self) -> str:
@@ -28,8 +31,10 @@ class AttackRecorder:
         with self._lock:
             self._session_id = str(uuid.uuid4())
             self._actions = []
-            self._persist()
-            return self._session_id
+            new_session_id = self._session_id
+
+        self._persist()
+        return new_session_id
 
     def log_action(
         self,
@@ -48,8 +53,9 @@ class AttackRecorder:
 
         with self._lock:
             self._actions.append(entry)
-            self._persist()
-            return entry
+
+        self._persist()
+        return entry
 
     def actions(self) -> List[Dict[str, Any]]:
         with self._lock:
@@ -82,10 +88,41 @@ class AttackRecorder:
             return "P5"
         return "P6"
 
-    def compute_behavioral_features(self) -> Dict[str, Any]:
-        with self._lock:
-            actions = list(self._actions)
+    def _load_existing_session(self) -> None:
+        if not self._session_path.exists():
+            return
 
+        try:
+            with self._session_path.open("r", encoding="utf-8") as fp:
+                payload = json.load(fp)
+        except (OSError, json.JSONDecodeError):
+            return
+
+        if not isinstance(payload, dict):
+            return
+
+        session_id = payload.get("session_id")
+        raw_actions = payload.get("actions", [])
+        if not isinstance(session_id, str) or not session_id.strip():
+            return
+        if not isinstance(raw_actions, list):
+            return
+
+        cleaned_actions: List[Dict[str, Any]] = []
+        for action in raw_actions:
+            if not isinstance(action, dict):
+                continue
+            if "timestamp" not in action or "type" not in action:
+                continue
+            cleaned_actions.append(action)
+
+        self._session_id = session_id
+        self._actions = cleaned_actions
+
+    def _compute_behavioral_features_from_actions(
+        self,
+        actions: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
         if not actions:
             return {
                 "probe_rate": 0.0,
@@ -169,6 +206,11 @@ class AttackRecorder:
             "estimated_objective": objective,
         }
 
+    def compute_behavioral_features(self) -> Dict[str, Any]:
+        with self._lock:
+            actions = list(self._actions)
+        return self._compute_behavioral_features_from_actions(actions)
+
     def get_status(self) -> Dict[str, Any]:
         features = self.compute_behavioral_features()
         with self._lock:
@@ -185,14 +227,16 @@ class AttackRecorder:
         }
 
     def _persist(self) -> None:
-        session_payload = {
-            "session_id": self._session_id,
-            "actions": self._actions,
-        }
-        behavior_payload = self.compute_behavioral_features()
+        with self._lock:
+            session_payload = {
+                "session_id": self._session_id,
+                "actions": list(self._actions),
+            }
 
-        with (self.output_dir / "attacker_session.json").open("w", encoding="utf-8") as fp:
+        behavior_payload = self._compute_behavioral_features_from_actions(session_payload["actions"])
+
+        with self._session_path.open("w", encoding="utf-8") as fp:
             json.dump(session_payload, fp, indent=2)
 
-        with (self.output_dir / "behavioral_features.json").open("w", encoding="utf-8") as fp:
+        with self._behavior_path.open("w", encoding="utf-8") as fp:
             json.dump(behavior_payload, fp, indent=2)

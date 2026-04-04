@@ -1,0 +1,9 @@
+{
+  "probe_rate": 60.0,
+  "target_breadth": 0.039,
+  "sequential_score": 1.0,
+  "stage_focus": "P1",
+  "response_to_alert": 0.0,
+  "estimated_skill_level": 1,
+  "estimated_objective": "disruption"
+}
