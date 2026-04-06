@@ -2,7 +2,60 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Plot from 'react-plotly.js';
 import { useSearchParams } from 'react-router-dom';
 import { api, getWsBaseUrl } from '../api/client';
+import GnnRelationshipPanel from '../components/GnnRelationshipPanel';
 import SensorGrid from '../components/SensorGrid';
+
+const STAGE_REP_SENSORS = ['Feature_0', 'Feature_9', 'Feature_17', 'Feature_26', 'Feature_34', 'Feature_43'];
+const RELATIONSHIP_EDGES = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [4, 5],
+  [0, 2],
+  [2, 4],
+];
+const BASELINE_SAMPLE_COUNT = 5;
+
+function edgeKey(fromId, toId) {
+  return String(fromId) + '-' + String(toId);
+}
+
+function safeNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function extractEdgeMap(sensorReadings) {
+  const nodeValues = STAGE_REP_SENSORS.map((sensorName) => safeNumber(sensorReadings[sensorName]));
+  const map = {};
+
+  RELATIONSHIP_EDGES.forEach(([fromId, toId]) => {
+    map[edgeKey(fromId, toId)] = nodeValues[toId] - nodeValues[fromId];
+  });
+
+  return map;
+}
+
+function meanEdgeMap(edgeMaps) {
+  if (!edgeMaps.length) {
+    return {};
+  }
+
+  const aggregate = {};
+  edgeMaps.forEach((item) => {
+    Object.entries(item).forEach(([key, value]) => {
+      aggregate[key] = (aggregate[key] || 0) + Number(value);
+    });
+  });
+
+  const out = {};
+  Object.entries(aggregate).forEach(([key, value]) => {
+    out[key] = value / edgeMaps.length;
+  });
+
+  return out;
+}
 
 function AttackTheater({ demoMode }) {
   const [searchParams] = useSearchParams();
@@ -13,9 +66,26 @@ function AttackTheater({ demoMode }) {
   const [timeline, setTimeline] = useState({ x: [], lines: {} });
   const [flashingSensors, setFlashingSensors] = useState([]);
   const [streamStatus, setStreamStatus] = useState('idle');
+  const [latestTimestep, setLatestTimestep] = useState(0);
+  const [relationshipSnapshot, setRelationshipSnapshot] = useState({
+    integrityScore: 100,
+    edgesBroken: 0,
+    totalEdges: RELATIONSHIP_EDGES.length,
+    gnnAlertLatencySec: null,
+    baselineDetectionRate: null,
+    edgeStates: RELATIONSHIP_EDGES.map(([fromId, toId]) => ({
+      fromId,
+      toId,
+      broken: false,
+      deviation: 0,
+    })),
+  });
 
   const socketRef = useRef(null);
   const previousReadingsRef = useRef({});
+  const relationshipBaselineSamplesRef = useRef([]);
+  const relationshipBaselineRef = useRef({});
+  const gnnAlertFrameRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +150,26 @@ function AttackTheater({ demoMode }) {
     stopStream();
     setTimeline({ x: [], lines: {} });
     previousReadingsRef.current = {};
+    relationshipBaselineSamplesRef.current = [];
+    relationshipBaselineRef.current = {};
+    gnnAlertFrameRef.current = null;
+    setLatestTimestep(0);
+    setRelationshipSnapshot({
+      integrityScore: 100,
+      edgesBroken: 0,
+      totalEdges: RELATIONSHIP_EDGES.length,
+      gnnAlertLatencySec: null,
+      baselineDetectionRate:
+        selectedAttack && typeof selectedAttack.detection_rate === 'number'
+          ? Number(selectedAttack.detection_rate)
+          : null,
+      edgeStates: RELATIONSHIP_EDGES.map(([fromId, toId]) => ({
+        fromId,
+        toId,
+        broken: false,
+        deviation: 0,
+      })),
+    });
 
     const speed = demoMode ? 3 : 1;
     const wsUrl =
@@ -109,6 +199,8 @@ function AttackTheater({ demoMode }) {
       try {
         const payload = JSON.parse(event.data);
         const nextReadings = payload.sensor_readings || {};
+        const frameTimestep = Number(payload.timestep || 0);
+        setLatestTimestep(frameTimestep);
         setSensorReadings(nextReadings);
 
         const tracked = Object.keys(nextReadings).slice(0, 6);
@@ -137,6 +229,64 @@ function AttackTheater({ demoMode }) {
         });
         setFlashingSensors(flashes);
         previousReadingsRef.current = nextReadings;
+
+        const edgeMap = extractEdgeMap(nextReadings);
+        if (!Object.keys(relationshipBaselineRef.current).length) {
+          relationshipBaselineSamplesRef.current.push(edgeMap);
+          if (relationshipBaselineSamplesRef.current.length >= BASELINE_SAMPLE_COUNT) {
+            relationshipBaselineRef.current = meanEdgeMap(relationshipBaselineSamplesRef.current);
+          }
+        }
+
+        const baselineMap = relationshipBaselineRef.current;
+        const sigma = Number(selectedAttack?.sigma || 1);
+        const deviationThreshold = Math.max(0.26, 0.5 - (sigma * 0.06));
+
+        let brokenCount = 0;
+        let deviationTotal = 0;
+        const edgeStates = RELATIONSHIP_EDGES.map(([fromId, toId]) => {
+          const key = edgeKey(fromId, toId);
+          const baselineValue = Number(baselineMap[key] || 0);
+          const liveValue = Number(edgeMap[key] || 0);
+          const deviation = Math.abs(liveValue - baselineValue) / Math.max(0.8, Math.abs(baselineValue));
+          const broken = Object.keys(baselineMap).length > 0 && deviation > deviationThreshold;
+          deviationTotal += deviation;
+          if (broken) {
+            brokenCount += 1;
+          }
+
+          return {
+            fromId,
+            toId,
+            broken,
+            deviation,
+          };
+        });
+
+        if (brokenCount > 0 && gnnAlertFrameRef.current === null) {
+          gnnAlertFrameRef.current = frameTimestep;
+        }
+
+        const avgDeviation = edgeStates.length ? deviationTotal / edgeStates.length : 0;
+        const integrityScore = Math.max(
+          0,
+          100 - (brokenCount / RELATIONSHIP_EDGES.length) * 55 - Math.min(45, avgDeviation * 26)
+        );
+
+        setRelationshipSnapshot({
+          integrityScore,
+          edgesBroken: brokenCount,
+          totalEdges: RELATIONSHIP_EDGES.length,
+          gnnAlertLatencySec:
+            typeof gnnAlertFrameRef.current === 'number' && gnnAlertFrameRef.current > 0
+              ? gnnAlertFrameRef.current
+              : null,
+          baselineDetectionRate:
+            selectedAttack && typeof selectedAttack.detection_rate === 'number'
+              ? Number(selectedAttack.detection_rate)
+              : null,
+          edgeStates,
+        });
       } catch (error) {
         setStreamStatus('payload_error');
       }
@@ -209,6 +359,8 @@ function AttackTheater({ demoMode }) {
         ) : null}
       </div>
 
+      <GnnRelationshipPanel relationshipSnapshot={relationshipSnapshot} streamStatus={streamStatus} />
+
       <div className="glass-panel rounded-xl p-4">
         <h3 className="mb-2 text-lg font-semibold">Live Affected Sensor Timeline</h3>
         <Plot
@@ -230,6 +382,9 @@ function AttackTheater({ demoMode }) {
 
       <div className="glass-panel rounded-xl p-4">
         <h3 className="mb-2 text-lg font-semibold">Real-Time Sensor Deviation Grid</h3>
+        <p className="mono mb-2 text-xs uppercase tracking-[0.2em] text-slate-300">
+          Timestep: {latestTimestep || '--'}
+        </p>
         <SensorGrid
           sensorReadings={sensorReadings}
           blindspotScores={blindspotScores}
